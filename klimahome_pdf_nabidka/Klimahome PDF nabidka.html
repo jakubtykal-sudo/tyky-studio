@@ -1,0 +1,1481 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8" />
+<title>Klimahome — PDF nabídka po kalkulačce (v4)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #ff4227;
+    --orange-deep: #e23416;
+    --orange-soft: #ffe9e3;
+    --ink: #2a2c33;
+    --ink-2: #43454b;
+    --mute: #6b6e76;
+    --mute-2: #9a9ca3;
+    --cream: #faf6f1;
+    --cream-2: #f3eee5;
+    --line: #ebe6df;
+    --line-2: #ddd6c8;
+    --sky: #2bb6e0;
+    --green: #2f9a5e;
+    --green-soft: #e6f2eb;
+    --bg: #e6e3de;
+    --paper: #ffffff;
+
+    --page-w: 210mm;
+    --page-h: 297mm;
+    --pad-x: 16mm;
+    --pad-y: 14mm;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    background: var(--bg);
+    font-family: 'Poppins', system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    padding: 28px 0 80px;
+  }
+  .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+  }
+  .page {
+    width: var(--page-w);
+    height: var(--page-h);
+    background: var(--paper);
+    box-shadow: 0 1px 2px rgba(20,16,12,.04), 0 18px 50px rgba(20,16,12,.12);
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; }
+  .page-inner {
+    position: absolute;
+    inset: var(--pad-y) var(--pad-x);
+    padding-bottom: 20mm;
+    display: flex;
+    flex-direction: column;
+  }
+
+  @page { size: A4; margin: 0; }
+  @media print {
+    body { background: white; padding: 0; }
+    .stack { gap: 0; }
+    .page { box-shadow: none; }
+    .toolbar, .page-tag { display: none !important; }
+  }
+
+  .page-tag {
+    position: absolute;
+    left: -76px;
+    top: 28px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #888;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  /* ============================================================ */
+  /* Header / footer                                               */
+  /* ============================================================ */
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 9px;
+    border-bottom: 1px solid var(--line);
+  }
+  .head .logo {
+    height: 28px;
+    width: auto;
+    display: block;
+  }
+  .head .meta {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--mute);
+    letter-spacing: .02em;
+    line-height: 1.5;
+  }
+  .head .meta b { color: var(--ink-2); font-weight: 600; }
+  .head .meta .num {
+    color: var(--orange);
+    font-weight: 600;
+    letter-spacing: .05em;
+  }
+
+  .foot {
+    position: absolute;
+    bottom: 8mm;
+    left: var(--pad-x);
+    right: var(--pad-x);
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--mute);
+    letter-spacing: .02em;
+    line-height: 1.5;
+  }
+  .foot .left { max-width: 130mm; }
+  .foot .left b { color: var(--ink-2); font-weight: 600; }
+  .foot .pageno {
+    text-align: right;
+  }
+  .foot .pageno .big {
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+    color: var(--orange);
+    font-weight: 700;
+    letter-spacing: -.01em;
+    display: block;
+    line-height: 1;
+  }
+  .foot .pageno small {
+    font-size: 9px;
+    color: var(--mute-2);
+  }
+
+  /* ============================================================ */
+  /* Type / atoms                                                  */
+  /* ============================================================ */
+  h1, h2, h3, h4 { margin: 0; color: var(--ink); letter-spacing: -.01em; font-weight: 700; }
+  p { margin: 0; }
+  .eyebrow {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .22em;
+    color: var(--orange);
+    font-weight: 700;
+  }
+  .eyebrow.mute { color: var(--mute); }
+  .h-section {
+    font-size: 30px;
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: -.02em;
+  }
+  .h-section em { font-style: normal; color: var(--orange); }
+  .h-sub {
+    margin-top: 7px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    max-width: 170mm;
+  }
+  .section-label {
+    display: inline-block;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .2em;
+    color: var(--ink);
+    font-weight: 700;
+    padding: 4px 10px 4px 0;
+    border-bottom: 2px solid var(--orange);
+  }
+
+  /* Subtle orange wave divider (echoes logo) */
+  .wave {
+    display: block;
+    width: 100%;
+    height: 6px;
+    margin: 14px 0;
+  }
+
+  /* Placeholder for photos */
+  .ph {
+    position: relative;
+    background:
+      repeating-linear-gradient(135deg,
+        var(--cream) 0 8px, var(--cream-2) 8px 16px);
+    border: 1px solid var(--line-2);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-2);
+  }
+  .ph-label {
+    background: rgba(255,255,255,.94);
+    border: 1px solid var(--line-2);
+    padding: 7px 11px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-2);
+    text-align: center;
+    max-width: 84%;
+    line-height: 1.5;
+    border-radius: 2px;
+  }
+  .ph-label b { color: var(--orange); font-weight: 700; }
+  .ph-corner {
+    position: absolute; top: 7px; left: 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--mute);
+    background: rgba(255,255,255,.92);
+    padding: 2px 5px;
+    border-radius: 2px;
+    letter-spacing: 0;
+  }
+
+  /* ============================================================ */
+  /* PAGE 1 — COVER                                                */
+  /* ============================================================ */
+  .cover-grid {
+    margin-top: 10mm;
+    text-align: center;
+  }
+  .cover-grid .eyebrow { color: var(--mute); }
+  .cover-title {
+    margin-top: 10px;
+    font-size: 50px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -.025em;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+  .cover-title em {
+    font-style: normal;
+    color: var(--orange);
+  }
+  .cover-chips {
+    margin: 18px auto 0;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 14px;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 12.5px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .chip .d {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--orange);
+  }
+  .cover-hero {
+    border-radius: 4px;
+    min-height: 60mm;
+  }
+  .cover-foot {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: var(--cream);
+    border-left: 3px solid var(--orange);
+    border-radius: 2px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .cover-foot b { color: var(--ink); font-weight: 600; }
+
+  /* ============================================================ */
+  /* PAGE 2 — VARIANTS                                             */
+  /* ============================================================ */
+  .variants {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+  .variant {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: 56mm 1fr;
+    background: #fff;
+    overflow: hidden;
+    position: relative;
+    min-height: 55mm;
+  }
+  .variant.chosen {
+    border: 2px solid var(--orange);
+    box-shadow: 0 0 0 4px rgba(255, 66, 39, .1);
+  }
+  .variant.chosen .chosen-flag {
+    position: absolute;
+    top: -2px; right: -2px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    padding: 7px 12px 7px 14px;
+    border-radius: 0 4px 0 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 2;
+  }
+  .variant.chosen .chosen-flag::before {
+    content: "✓";
+    font-size: 11px;
+    color: var(--orange);
+  }
+  .v-img {
+    border-right: 1px solid var(--line);
+  }
+  .v-body {
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .v-tag-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .v-tag {
+    font-size: 9.5px;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: #fff;
+    font-weight: 700;
+    padding: 3px 9px;
+    background: var(--orange);
+    border-radius: 2px;
+  }
+  .v-tag.fav { background: var(--ink); }
+  .v-tag.premium { background: var(--sky); }
+  .v-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--mute);
+    letter-spacing: .04em;
+  }
+  .v-name {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+  .v-claim {
+    font-size: 12px;
+    color: var(--ink-2);
+    line-height: 1.4;
+    max-width: 95mm;
+  }
+  .v-claim::before { content: "„"; color: var(--orange); font-weight: 700; }
+  .v-claim::after  { content: "“"; color: var(--orange); font-weight: 700; }
+  .v-list {
+    margin: 3px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+    font-size: 11px;
+    color: var(--ink-2);
+    line-height: 1.45;
+  }
+  .v-list li {
+    position: relative;
+    padding-left: 11px;
+  }
+  .v-list li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 6px;
+    width: 4px; height: 4px;
+    background: var(--orange);
+    border-radius: 50%;
+  }
+  .v-list li b { color: var(--ink); font-weight: 600; }
+  .p2-foot {
+    margin-top: 8px;
+    font-size: 10.5px;
+    color: var(--mute);
+    font-style: italic;
+    text-align: center;
+    padding: 0 10mm;
+    line-height: 1.5;
+  }
+
+  /* ============================================================ */
+  /* PAGE 3 — 6 BOXES                                              */
+  /* ============================================================ */
+  .boxes {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 1fr;
+    gap: 10px 12px;
+    flex: 1 1 auto;
+  }
+  .boxes-wrap {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .box {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 16px 16px 16px 18px;
+    background: #fff;
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 14px;
+    position: relative;
+    align-content: start;
+  }
+  .box::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--orange);
+    border-radius: 4px 0 0 4px;
+  }
+  .box .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    background: var(--orange-soft);
+    color: var(--orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .box .icon svg { display: block; }
+  .box .icon-text {
+    font-weight: 800;
+    font-size: 17px;
+    color: var(--orange);
+    letter-spacing: -.02em;
+  }
+  .box-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--orange);
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .box h3 {
+    font-size: 14.5px;
+    font-weight: 700;
+    margin-top: 2px;
+    color: var(--ink);
+    letter-spacing: -.005em;
+    line-height: 1.25;
+  }
+  .box p {
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    margin-top: 6px;
+  }
+  .box p b { color: var(--ink); font-weight: 600; }
+
+  .callout {
+    margin-top: 14px;
+    background: var(--ink);
+    color: #fff;
+    padding: 20px 28px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 16px;
+    line-height: 1.45;
+    font-weight: 500;
+    position: relative;
+  }
+  .callout b { color: var(--orange); font-weight: 700; }
+  .callout::after {
+    content: "";
+    position: absolute;
+    left: 22px; right: 22px; bottom: -5px;
+    height: 6px;
+    background: var(--orange);
+    border-radius: 0 0 4px 4px;
+  }
+
+  /* ============================================================ */
+  /* PAGE 4 — PRICES                                               */
+  /* ============================================================ */
+  table.prices {
+    margin-top: 14px;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12.5px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  table.prices th, table.prices td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  table.prices thead th {
+    background: var(--ink);
+    color: #fff;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-weight: 600;
+  }
+  table.prices thead th .brand-cell {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: -.01em;
+    margin-top: 4px;
+    color: #fff;
+  }
+  table.prices thead th .brand-cell em {
+    display: block;
+    font-style: normal;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    color: rgba(255,255,255,.6);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    margin-top: 2px;
+  }
+  table.prices thead th:nth-child(3) {
+    background: var(--orange);
+  }
+  table.prices thead th:nth-child(3) .brand-cell em { color: rgba(255,255,255,.85); }
+  table.prices tbody td.config {
+    color: var(--ink);
+    font-weight: 600;
+    width: 38%;
+    background: var(--cream);
+  }
+  table.prices tbody td.config small {
+    display: block;
+    font-weight: 400;
+    color: var(--mute);
+    font-size: 10.5px;
+    margin-top: 1px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: .02em;
+  }
+  table.prices tbody td.price {
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  table.prices tbody td.price .od {
+    color: var(--mute);
+    font-size: 10.5px;
+    margin-right: 4px;
+    font-weight: 400;
+  }
+  table.prices tbody td:nth-child(3) {
+    background: #fff7f4;
+    font-weight: 600;
+  }
+  table.prices tr:last-child td { border-bottom: none; }
+
+  .disclaimer {
+    margin-top: 9px;
+    font-size: 10px;
+    line-height: 1.55;
+    color: var(--mute);
+    font-style: italic;
+    padding-left: 12px;
+    border-left: 2px solid var(--line);
+  }
+
+  .path {
+    margin-top: 18px;
+  }
+  .path .section-label { margin-bottom: 12px; }
+  .path-steps {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    position: relative;
+  }
+  .step {
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px 14px 16px;
+    position: relative;
+  }
+  .step .step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--orange);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 9px;
+  }
+  .step h4 {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -.005em;
+    line-height: 1.25;
+  }
+  .step p {
+    margin-top: 5px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .step::after {
+    content: "→";
+    position: absolute;
+    right: -12px; top: 22px;
+    color: var(--orange);
+    font-weight: 700;
+    font-size: 16px;
+    background: var(--paper);
+    padding: 0 2px;
+  }
+  .step:last-child::after { display: none; }
+
+  /* Testimonial strip (echo z reference: 2 quotes pod sebou + ratings) */
+  .testi {
+    margin-top: 16px;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 16px 18px;
+    display: grid;
+    grid-template-columns: 1fr 92mm;
+    gap: 22px;
+    align-items: center;
+  }
+  .testi .quotes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .testi .q { font-size: 11.5px; line-height: 1.5; color: var(--ink-2); font-style: italic; position: relative; padding-left: 14px; }
+  .testi .q::before { content: "„"; position: absolute; left: 0; top: -3px; color: var(--orange); font-weight: 700; font-size: 18px; font-style: normal; }
+  .testi .q .by { display: block; font-style: normal; color: var(--mute); margin-top: 3px; font-size: 10.5px; }
+  .testi .ratings {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .rating {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .rating .num {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -.02em;
+    line-height: 1;
+  }
+  .rating .num em { font-style: normal; color: var(--mute); font-size: 13px; font-weight: 500; }
+  .rating .stars { color: var(--orange); font-size: 11px; letter-spacing: .15em; margin-top: 3px; }
+  .rating .src { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--mute); margin-top: 4px; letter-spacing: .04em; }
+
+  /* ============================================================ */
+  /* PAGE 5 — NEXT + CONTACT                                       */
+  /* ============================================================ */
+  .timeline {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 0;
+    position: relative;
+  }
+  .tl-line {
+    position: absolute;
+    left: 22px; right: 22px;
+    top: 22px;
+    height: 2px;
+    background: var(--cream-2);
+    z-index: 0;
+  }
+  .tl-line::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background: repeating-linear-gradient(90deg, var(--orange) 0 6px, transparent 6px 12px);
+    opacity: .6;
+  }
+  .tl {
+    position: relative;
+    padding: 0 8px;
+    z-index: 1;
+  }
+  .tl-dot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--orange);
+    color: #fff;
+    font-weight: 800;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid var(--paper);
+    margin-bottom: 12px;
+    letter-spacing: -.02em;
+  }
+  .tl-when {
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: .2em;
+    color: var(--orange);
+    font-weight: 700;
+  }
+  .tl h4 {
+    margin-top: 4px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.25;
+    letter-spacing: -.005em;
+  }
+  .tl p {
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+
+  .contact {
+    margin-top: 20px;
+    background: var(--ink);
+    color: #fff;
+    border-radius: 6px;
+    padding: 22px 26px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 22px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .contact::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 6px;
+    background: var(--orange);
+  }
+  .contact .lead {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .22em;
+    opacity: .7;
+    font-weight: 600;
+  }
+  .contact .phone {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -.025em;
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .contact .or {
+    font-size: 12px;
+    opacity: .75;
+    margin-top: 9px;
+    max-width: 110mm;
+    line-height: 1.55;
+  }
+  .contact .or a { color: var(--orange); text-decoration: none; font-weight: 600; }
+  .contact .qr {
+    width: 78px; height: 78px;
+    background: #fff;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-align: center;
+    line-height: 1.3;
+    padding: 6px;
+    gap: 2px;
+  }
+  .contact .qr b { display: block; font-weight: 700; font-size: 10px; }
+
+  .proof-row {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .creds {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .cred {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px 12px;
+    background: #fff;
+    text-align: left;
+    font-size: 10.5px;
+    color: var(--ink-2);
+    line-height: 1.35;
+  }
+  .cred b {
+    color: var(--ink);
+    font-weight: 700;
+    display: block;
+    font-size: 13px;
+    margin-bottom: 2px;
+    letter-spacing: -.01em;
+  }
+  .partners {
+    margin-top: 12px;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 12px 14px;
+  }
+  .partners .label {
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: .2em;
+    color: var(--mute);
+    font-weight: 600;
+    margin-bottom: 9px;
+  }
+  .partners-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+  .partner-ph {
+    height: 32px;
+    border: 1px dashed var(--line-2);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--mute);
+    background: #fff;
+    letter-spacing: .04em;
+  }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    background: var(--ink);
+    color: #fff;
+    border-radius: 999px;
+    padding: 8px 8px 8px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    z-index: 999;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  }
+  .toolbar b { color: var(--orange); }
+  .toolbar button {
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font: inherit;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-weight: 700;
+    letter-spacing: .03em;
+  }
+  .toolbar button:hover { background: var(--orange-deep); }
+
+  /* Orange wave for cover */
+  .cover-wave {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 0;
+    height: 80px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .cover-wave svg { display: block; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <span>KH PDF nabídka · <b>master v4 — vyladěné</b></span>
+  <button onclick="window.print()">Tisk / Uložit jako PDF</button>
+</div>
+
+<div class="stack">
+
+  <!-- ================================================================ -->
+  <!-- PAGE 1 — COVER                                                    -->
+  <!-- ================================================================ -->
+  <section class="page" data-screen-label="01 Titulní">
+    <div class="page-tag">01 — Titulní</div>
+    <div class="page-inner">
+
+      <div class="head">
+        <img src="logo_klimahome/klimahome_logo.svg" alt="Klimahome" class="logo" />
+        <div class="meta">
+          Osobní nabídka po kalkulačce<br/>
+          <b>21. 5. 2026</b> · č. nabídky <span class="num">2026-05-000001</span>
+        </div>
+      </div>
+
+      <div class="cover-grid">
+        <div class="eyebrow">Děkujeme za vyplnění kalkulačky</div>
+        <h1 class="cover-title">Vaše nabídka<br/><em>klimatizace</em></h1>
+        <div class="cover-chips">
+          <span class="chip"><span class="d"></span>Pan Vzorový Zákazník</span>
+          <span class="chip"><span class="d"></span>Praha-západ</span>
+          <span class="chip"><span class="d"></span>2 místnosti</span>
+        </div>
+      </div>
+
+      <div class="cover-foot" style="margin-top: 18px;">
+        Tady je <b>podrobnější představení</b> toho, co od nás dostanete — tři značky, které vám doporučujeme, čím se od e-shopu lišíme, a co bude dál. Brzy se vám ozveme, abychom probrali detaily a domluvili <b>zaměření zdarma</b>.
+      </div>
+
+      <div class="cover-hero" style="flex: 1 1 auto; margin-top: 14px; background: url('montaze/hero_realizace_main.jpg') center 35%/cover no-repeat #eee; border: 1px solid var(--line); border-radius: 4px; min-height: 60mm;">
+      </div>
+
+      <div class="foot">
+        <div class="left">
+          Klimahome s.r.o. · IČO 12345678 · Společnost je zapsána v Obchodním rejstříku vedeném Městským soudem v Plzni, oddíl C, vložka 32940.
+        </div>
+        <div class="pageno"><span class="big">01</span><small>/ 05</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- PAGE 2 — VARIANTS                                                 -->
+  <!-- ================================================================ -->
+  <section class="page" data-screen-label="02 Tři varianty">
+    <div class="page-tag">02 — Tři varianty</div>
+    <div class="page-inner">
+
+      <div class="head">
+        <img src="logo_klimahome/klimahome_logo.svg" alt="Klimahome" class="logo" />
+        <div class="meta">Strana <b>02 / 05</b> · Doporučené značky</div>
+      </div>
+
+      <div style="margin-top: 18px;">
+        <div class="eyebrow">Naše doporučení</div>
+        <h2 class="h-section" style="margin-top: 6px;">Tři varianty,<br/>které vám <em>doporučujeme</em></h2>
+        <p class="h-sub">Tři značky, které montujeme nejčastěji — od cenově dostupné po prémiový design.</p>
+      </div>
+
+      <div class="variants">
+
+        <!-- VARIANT 1 -->
+        <div class="variant">
+          <div class="v-img" style="background: #fff; display: flex; align-items: center; justify-content: center; padding: 3mm;"><img src="produkty/beko_vnitrni_jednotka.png" alt="Beko Evolutio" style="max-width: 100%; max-height: 100%; object-fit: contain;"></div>
+          <div class="v-body">
+            <div class="v-tag-row">
+              <span class="v-tag">Nejdostupnější</span>
+              <span class="v-meta">od 24 900 Kč · 1 místnost</span>
+            </div>
+            <div class="v-name">Beko Evolutio</div>
+            <div class="v-claim">Spolehlivá klima za dobrou cenu. A péče, kterou nikdy nevyužijete — ale je tam.</div>
+            <ul class="v-list">
+              <li><b>Energetická třída A++</b>, inverter — provoz „jako dvě žárovky"</li>
+              <li><b>HygieneMax UV-C:</b> −91 % virů za hodinu</li>
+              <li><b>Ovládání přes mobil</b> (HomeWhiz)</li>
+              <li><b>Tichá:</b> od 21 dB</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- VARIANT 2 -->
+        <div class="variant">
+          <div class="v-img" style="background: #fff; display: flex; align-items: center; justify-content: center; padding: 3mm;"><img src="produkty/samsung_windfree.png" alt="Samsung WindFree" style="max-width: 100%; max-height: 100%; object-fit: contain;"></div>
+          <div class="v-body">
+            <div class="v-tag-row">
+              <span class="v-tag fav">Nejoblíbenější</span>
+              <span class="v-meta">od 39 810 Kč · 1 místnost</span>
+            </div>
+            <div class="v-name">Samsung WindFree</div>
+            <div class="v-claim">Chlazení bez foukání. A 5letá záruka, jakou dáváme i u Beko a Toshiby.</div>
+            <ul class="v-list">
+              <li><b>WindFree™</b> — 23 000 mikrootvorů místo přímého proudění</li>
+              <li><b>AI Auto Comfort</b> — učí se denní rytmus</li>
+              <li><b>Až o 73 % nižší spotřeba</b> (Digital Inverter Boost)</li>
+              <li><b>Integrace</b> s chytrou domácností</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- VARIANT 3 -->
+        <div class="variant">
+          <div class="v-img" style="background: #fff; display: flex; align-items: center; justify-content: center; padding: 3mm;"><img src="produkty/toshiba_haori.webp" alt="Toshiba Haori" style="max-width: 100%; max-height: 100%; object-fit: contain;"></div>
+          <div class="v-body">
+            <div class="v-tag-row">
+              <span class="v-tag premium">Prémiový design</span>
+              <span class="v-meta">od 46 520 Kč · 1 místnost</span>
+            </div>
+            <div class="v-name">Toshiba Haori</div>
+            <div class="v-claim">Klimatizace, kterou si pověsíte do obýváku jako dekoraci.</div>
+            <ul class="v-list">
+              <li><b>Vyměnitelný textilní potah</b> (více barev)</li>
+              <li><b>Nejtišší:</b> od 19 dB</li>
+              <li><b>A+++</b> energetická třída</li>
+              <li><b>Ovládání hlasem</b> (Alexa, Google)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="p2-foot">
+        Kromě těchto tří značek montujeme i <b style="color: var(--ink); font-weight: 600;">Daikin, Acond, Midea, LG, Sinclair</b> a další. Doporučíme, co se hodí konkrétně k vám.
+      </div>
+
+      <div class="foot">
+        <div class="left">Klimahome s.r.o. · IČO 12345678 · www.klimahome.cz · +420 606 872 526</div>
+        <div class="pageno"><span class="big">02</span><small>/ 05</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- PAGE 3 — 6 BOXES                                                  -->
+  <!-- ================================================================ -->
+  <section class="page" data-screen-label="03 Co dostáváte navíc">
+    <div class="page-tag">03 — Proč my</div>
+    <div class="page-inner">
+
+      <div class="head">
+        <img src="logo_klimahome/klimahome_logo.svg" alt="Klimahome" class="logo" />
+        <div class="meta">Strana <b>03 / 05</b> · Proč Klimahome</div>
+      </div>
+
+      <div style="margin-top: 18px;">
+        <div class="eyebrow">Rozdíl mezi e-shopem a námi</div>
+        <h2 class="h-section" style="margin-top: 6px;">Co u nás dostáváte,<br/>co u e-shopu <em>chybí</em></h2>
+        <p class="h-sub">Klima je technika, která vám má sloužit 10–15 let. Tady je šest věcí, které dělají rozdíl mezi „koupil jsem klimu" a „mám komfort".</p>
+      </div>
+
+      <div class="boxes">
+
+        <!-- BOX 1 -->
+        <div class="box">
+          <div class="icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2"/>
+              <line x1="13.5" y1="13.5" x2="19" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="box-num">01 · Zaměření</div>
+            <h3>Než zaplatíte korunu, přijdeme se podívat</h3>
+            <p>Krásná klima za padesát tisíc nemusí jít namontovat — třeba kvůli umístění nebo odvodu kondenzátu. Přijedeme k vám, změříme to, navrhneme řešení. <b>Když se rozhodnete pro někoho jiného, nic neúčtujeme.</b></p>
+          </div>
+        </div>
+
+        <!-- BOX 2 -->
+        <div class="box">
+          <div class="icon">
+            <span class="icon-text">5</span>
+          </div>
+          <div>
+            <div class="box-num">02 · Záruka</div>
+            <h3>Pětiletá záruka — zdarma na všechny tři značky</h3>
+            <p>Standard jsou 2 roky. My ji prodlužujeme na 5 — na Beko, Samsung i Toshibu. <b>Bez příplatku, automaticky pro každého.</b> Když do pěti let dojde k závadě, opravíme zdarma.</p>
+          </div>
+        </div>
+
+        <!-- BOX 3 -->
+        <div class="box">
+          <div class="icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+              <circle cx="11" cy="11" r="2.2" fill="currentColor"/>
+              <circle cx="11" cy="2.5" r="1.4" fill="currentColor"/>
+              <circle cx="11" cy="19.5" r="1.4" fill="currentColor"/>
+              <circle cx="2.5"  cy="11" r="1.4" fill="currentColor"/>
+              <circle cx="19.5" cy="11" r="1.4" fill="currentColor"/>
+            </svg>
+          </div>
+          <div>
+            <div class="box-num">03 · Servisní plán</div>
+            <h3>Pravidelný servis za 2 000 Kč ročně</h3>
+            <p>Roční prohlídka je podmínka výrobce pro uznání záruky — u kohokoliv. Konkurence účtuje kolem 3 000 Kč. <b>U nás 2 000 Kč</b> a sami se vám připomeneme, abyste nepřišli o záruku.</p>
+          </div>
+        </div>
+
+        <!-- BOX 4 -->
+        <div class="box">
+          <div class="icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+              <line x1="11" y1="6.5" x2="11" y2="15.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+              <line x1="6.5" y1="11" x2="15.5" y2="11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="box-num">04 · Servis ostatních</div>
+            <h3>Servisujeme všechny značky, i ty od jiných</h3>
+            <p>Opravujeme i klimy, které montoval někdo jiný. Acond, Sinclair, Daikin, Toshiba, LG, Samsung, Midea — všechno. <b>Když původní montér nezvedá telefon, voláte nám.</b></p>
+          </div>
+        </div>
+
+        <!-- BOX 5 -->
+        <div class="box">
+          <div class="icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <line x1="11" y1="11" x2="11" y2="18" stroke="currentColor" stroke-width="2"/>
+              <line x1="11" y1="11" x2="5"  y2="6"  stroke="currentColor" stroke-width="2"/>
+              <line x1="11" y1="11" x2="17" y2="6"  stroke="currentColor" stroke-width="2"/>
+              <circle cx="11" cy="11" r="2.2" fill="currentColor"/>
+              <circle cx="5"  cy="6"  r="2" fill="currentColor"/>
+              <circle cx="17" cy="6"  r="2" fill="currentColor"/>
+              <circle cx="11" cy="18.6" r="2" fill="currentColor"/>
+            </svg>
+          </div>
+          <div>
+            <div class="box-num">05 · Jeden dodavatel</div>
+            <h3>Vše pod jednou střechou</h3>
+            <p>Klimu prodáme, navrhneme, namontujeme, servisujeme. Když cokoliv nefunguje, voláte na jedno číslo. <b>Žádné „volejte výrobce / montéra / e-shop"</b> — jeden dodavatel, jedna odpovědnost.</p>
+          </div>
+        </div>
+
+        <!-- BOX 6 -->
+        <div class="box">
+          <div class="icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <rect x="3" y="3" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+              <polyline points="7,11.5 10,14.5 15.5,8.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </div>
+          <div>
+            <div class="box-num">06 · Montáž + protokol</div>
+            <h3>Čistá montáž a oficiální protokol</h3>
+            <p>Montáž typicky <b>za 1 - 2 dny</b>. Zakryjeme podlahy, po práci uklidíme. Dostáváte protokol o provedení montáže certifikovanou osobou, pro servis, prodej nemovitosti nebo pojišťovnu.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="callout">
+        Cena, kterou vám zobrazí e-shop, je jen za krabici.<br/>
+        <b>To, co dostáváte u nás, je 10 let klidu.</b>
+      </div>
+
+      <div class="foot">
+        <div class="left"></div>
+        <div class="pageno"><span class="big">03</span><small>/ 05</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- PAGE 4 — PRICES + TESTIMONIALS                                    -->
+  <!-- ================================================================ -->
+  <section class="page" data-screen-label="04 Cenový rámec">
+    <div class="page-tag">04 — Cenový rámec</div>
+    <div class="page-inner">
+
+      <div class="head">
+        <img src="logo_klimahome/klimahome_logo.svg" alt="Klimahome" class="logo" />
+        <div class="meta">Strana <b>04 / 05</b> · Orientační rámec</div>
+      </div>
+
+      <div style="margin-top: 18px;">
+        <div class="eyebrow">Orientační cenový rámec</div>
+        <h2 class="h-section" style="margin-top: 6px;">Odkud začínají <em>ceny</em></h2>
+        <p class="h-sub">
+          <b>Beko</b> je nejdostupnější volba. <b>Samsung</b> uprostřed — komfort za rozumnou cenu. <b>Toshiba</b> je prémiový segment. Tady je orientační rámec, <b>od kterého ceny začínají</b>:
+        </p>
+      </div>
+
+      <table class="prices">
+        <thead>
+          <tr>
+            <th>Konfigurace</th>
+            <th>
+              <span class="brand-cell">Beko Evolutio<em>Nejdostupnější — ceny od</em></span>
+            </th>
+            <th>
+              <span class="brand-cell">Samsung WindFree<em>Nejoblíbenější — ceny od</em></span>
+            </th>
+            <th>
+              <span class="brand-cell">Toshiba Haori<em>Prémiový design — ceny od</em></span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="config">1 místnost<small>1+1 — venkovní + vnitřní jednotka</small></td>
+            <td class="price">24 900 Kč</td>
+            <td class="price">39 810 Kč</td>
+            <td class="price">46 520 Kč</td>
+          </tr>
+          <tr>
+            <td class="config">2 místnosti<small>1+2</small></td>
+            <td class="price">50 050 Kč</td>
+            <td class="price">78 310 Kč</td>
+            <td class="price">89 880 Kč</td>
+          </tr>
+          <tr>
+            <td class="config">3 místnosti<small>1+3</small></td>
+            <td class="price">78 280 Kč</td>
+            <td class="price">106 740 Kč</td>
+            <td class="price">143 850 Kč</td>
+          </tr>
+          <tr>
+            <td class="config">4 místnosti<small>1+4</small></td>
+            <td class="price">97 440 Kč</td>
+            <td class="price">139 650 Kč</td>
+            <td class="price">154 350 Kč</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="disclaimer">
+        Ceny obsahují zařízení, montáž, materiál, dopravu a DPH 12 %. Slovo „od" znamená cenu pro standardní montáž. Konečná částka záleží na zaměření — délka trasy potrubí, umístění venkovní jednotky, případně čerpadlo kondenzátu.
+      </p>
+
+      <div class="path">
+        <div class="section-label">Cesta k finální ceně</div>
+        <div class="path-steps">
+
+          <div class="step">
+            <div class="step-num">1</div>
+            <h4>Telefonát s kolegyní z centrály</h4>
+            <p>Ozveme se vám a upřesníme základní detaily — kdy se vám hodí návštěva, na co se zaměřit.</p>
+          </div>
+
+          <div class="step">
+            <div class="step-num">2</div>
+            <h4>Schůzka s obchodníkem + zaměření</h4>
+            <p>Zdarma a bez závazku. Podíváme se na prostor a navrhneme řešení přesně na míru.</p>
+          </div>
+
+          <div class="step">
+            <div class="step-num">3</div>
+            <h4>Finální nabídka s přesnou cenou</h4>
+            <p>Bez navyšování. Co řekneme, to platí. Pak už jen domluvíme termín montáže.</p>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="testi">
+        <div class="quotes">
+          <div class="q">
+            Firmu Klimahome vřele doporučuji. Montáž proběhla v termínu. Musím pochválit skvělou práci a přístup montérů a obchodního zástupce.
+            <span class="by">— Petra Pajerová</span>
+          </div>
+          <div class="q">
+            Firmu doporučujeme, naprostá spokojenost, profesionální přístup všech pracovníků.
+            <span class="by">— Ladislav Hübšman</span>
+          </div>
+        </div>
+        <div class="ratings">
+          <div class="rating">
+            <img src="loga_partneru/firmy_cz_logo.png" alt="Firmy.cz" style="width: 22px; height: 22px; display: block; margin: 0 auto 4px;">
+            <div class="num">4,9<em>/5</em></div>
+            <div class="stars">★ ★ ★ ★ ★</div>
+            <div class="src">Firmy.cz</div>
+          </div>
+          <div class="rating">
+            <img src="loga_partneru/google_review_logo.png" alt="Google" style="width: 22px; height: 22px; display: block; margin: 0 auto 4px;">
+            <div class="num">4,8<em>/5</em></div>
+            <div class="stars">★ ★ ★ ★ ★</div>
+            <div class="src">Google</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <div class="left">Klimahome s.r.o. · IČO 12345678 · Slovo „od" = standardní montáž. Konečná cena dle zaměření.</div>
+        <div class="pageno"><span class="big">04</span><small>/ 05</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- PAGE 5 — NEXT + CONTACT                                           -->
+  <!-- ================================================================ -->
+  <section class="page" data-screen-label="05 Co bude dál">
+    <div class="page-tag">05 — Co bude dál</div>
+    <div class="page-inner">
+
+      <div class="head">
+        <img src="logo_klimahome/klimahome_logo.svg" alt="Klimahome" class="logo" />
+        <div class="meta">Strana <b>05 / 05</b> · Co bude dál + kontakt</div>
+      </div>
+
+      <div style="margin-top: 18px;">
+        <div class="eyebrow">Další kroky</div>
+        <h2 class="h-section" style="margin-top: 6px;">Co bude <em>dál</em></h2>
+        <p class="h-sub">Od téhle nabídky po hotovou klimatizaci jsou typicky čtyři kroky. U každého víte, kdy se co stane.</p>
+      </div>
+
+      <div class="timeline">
+        <div class="tl-line"></div>
+
+        <div class="tl">
+          <div class="tl-dot">01</div>
+          <div class="tl-when">Brzy</div>
+          <h4>Ozve se naše kolegyně z centrály</h4>
+          <p>Zavolá vám, probereme základní informace a domluvíme čas, kdy se obchodník ozve.</p>
+        </div>
+
+        <div class="tl">
+          <div class="tl-dot">02</div>
+          <div class="tl-when">Pak</div>
+          <h4>Obchodník vám zavolá s dotazy</h4>
+          <p>Doptá se na detaily a domluvíte společně termín zaměření přímo u vás doma.</p>
+        </div>
+
+        <div class="tl">
+          <div class="tl-dot">03</div>
+          <div class="tl-when">Po zaměření</div>
+          <h4>Připravíme finální nabídku</h4>
+          <p>Už s přesnou cenou pro vaši konfiguraci — bez navyšování po podpisu.</p>
+        </div>
+
+        <div class="tl">
+          <div class="tl-dot">04</div>
+          <div class="tl-when">Termín</div>
+          <h4>Montáž zvládneme za 1 - 2 dny</h4>
+          <p>Zakryjeme podlahy, po práci uklidíme. Dostanete protokol o provedení.</p>
+        </div>
+      </div>
+
+      <div class="contact">
+        <div>
+          <div class="lead">Máte otázku hned?</div>
+          <div class="phone">+420 606 872 526</div>
+          <div class="or">
+            …nebo odpovězte na e-mail s touto nabídkou, případně napište na
+            <a href="mailto:info@klimahome.cz">info@klimahome.cz</a>.
+            Kdykoliv v pracovní dny <b style="opacity: .95;">8:00–17:00</b>.
+          </div>
+        </div>
+        <div class="qr" style="padding: 4px;"><img src="qr/qr_telefon_606872526.png" alt="QR — tel:+420 606 872 526" style="width: 100%; height: 100%; display: block; object-fit: contain;"></div>
+      </div>
+
+      <div style="margin-top: 22px;">
+        <div class="section-label">Hodnocení &amp; certifikace</div>
+
+        <div class="proof-row">
+          <div class="rating" style="text-align: left; display: grid; grid-template-columns: auto auto 1fr; gap: 14px; align-items: center; padding: 14px 16px;">
+            <img src="loga_partneru/firmy_cz_logo.png" alt="Firmy.cz" style="width: 36px; height: 36px; display: block;">
+            <div>
+              <div class="num">4,9<em>/5</em></div>
+              <div class="stars">★ ★ ★ ★ ★</div>
+            </div>
+            <div style="font-size: 11px; color: var(--mute); line-height: 1.5;">
+              <b style="color: var(--ink); font-weight: 700; font-size: 12.5px; display: block;">Firmy.cz</b>
+              ověřené recenze zákazníků
+            </div>
+          </div>
+          <div class="rating" style="text-align: left; display: grid; grid-template-columns: auto auto 1fr; gap: 14px; align-items: center; padding: 14px 16px;">
+            <img src="loga_partneru/google_review_logo.png" alt="Google" style="width: 36px; height: 36px; display: block;">
+            <div>
+              <div class="num">4,8<em>/5</em></div>
+              <div class="stars">★ ★ ★ ★ ★</div>
+            </div>
+            <div style="font-size: 11px; color: var(--mute); line-height: 1.5;">
+              <b style="color: var(--ink); font-weight: 700; font-size: 12.5px; display: block;">Google Reviews</b>
+              ověřené recenze zákazníků
+            </div>
+          </div>
+        </div>
+
+        <div class="creds">
+          <div class="cred"><b>12 let</b>zkušeností v oboru</div>
+          <div class="cred"><b>F-gas</b>certifikace na chladiva</div>
+          <div class="cred"><b>SCHKT</b>člen Svazu</div>
+          <div class="cred"><b>Autoriz.</b>partner 5 značek</div>
+        </div>
+
+        <div class="partners">
+          <div class="label">Autorizovaný partner značek</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 18px 28px; padding: 14px 18px; background: #fff; border: 1px solid var(--line); border-radius: 4px; align-items: center; justify-content: center; min-height: 56px;">
+            <span style="font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -.01em;">Samsung</span>
+            <span style="color: var(--line-2); font-weight: 300;">·</span>
+            <span style="font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -.01em;">Toshiba</span>
+            <span style="color: var(--line-2); font-weight: 300;">·</span>
+            <span style="font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -.01em;">Beko</span>
+            <span style="color: var(--line-2); font-weight: 300;">·</span>
+            <span style="font-size: 16px; font-weight: 600; color: var(--ink-2);">Daikin</span>
+            <span style="color: var(--line-2); font-weight: 300;">·</span>
+            <span style="font-size: 16px; font-weight: 600; color: var(--ink-2);">Acond</span>
+            <span style="color: var(--line-2); font-weight: 300;">·</span>
+            <span style="font-size: 16px; font-weight: 600; color: var(--ink-2);">Sinclair</span>
+            <span style="color: var(--line-2); font-weight: 300;">·</span>
+            <span style="font-size: 16px; font-weight: 600; color: var(--ink-2);">Midea</span>
+          </div>
+          <div style="margin-top: 8px; font-size: 10px; color: var(--mute); text-align: center;">
+            Tučně tři značky, které doporučujeme nejčastěji. Servisujeme i ty ostatní.
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <div class="left">
+          <b>Klimahome s.r.o.</b> · IČO 12345678 · www.klimahome.cz · +420 606 872 526 · info@klimahome.cz<br/>
+          Společnost je zapsána v Obchodním rejstříku vedeném Městským soudem v Plzni, oddíl C, vložka 32940.
+        </div>
+        <div class="pageno"><span class="big">05</span><small>/ 05</small></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>
